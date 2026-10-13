@@ -38,7 +38,7 @@ export async function registrarDuelo(
 const NOMBRES = ['Ayla', 'Gominoli', 'Barbará', 'Piruja', 'Dora', 'Aladín', 'Écaro', 'Rick']
 const CLASES = ['GUERRERO', 'MAGO', 'ARQUERO', 'PIRARO']
 const RAZAS = ['HUMANO', 'ORCO', 'ELFO', 'GOBLIN']
-const ASTRAS = ['Arena del Norte', 'Arena del Sur', null, 'Taberna El Poni Pisador']
+const ARENAS = ['Arena del Norte', 'Arena del Sur']
 
 /** Datos falsos pero con los mismos 14 campos del contrato. Para developear sin backends. */
 function rosterMock(a: Arena): Combatiente[] {
@@ -62,7 +62,7 @@ function rosterMock(a: Arena): Combatiente[] {
       danoArmaIzquierda: rnd(i + 9) % 25,
       combatesGanados: rnd(i + 10) % 20,
       combatesPerdidos: rnd(i + 11) % 20,
-      arena: ASTRAS[rnd(i + 12) % ASTRAS.length],
+      arena: ARENAS[rnd(i + 12) % ARENAS.length],
       origen: a.label,
     } satisfies Combatiente
   })

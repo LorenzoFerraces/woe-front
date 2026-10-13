@@ -24,8 +24,8 @@ export interface Combatiente {
   danoArmaIzquierda: number
   combatesGanados: number
   combatesPerdidos: number
-  /** Nombre del Lugar si es Arena, null si está en Taberna/Tienda. */
-  arena: string | null
+  /** El endpoint solo devuelve personajes en arena: nombre de la Arena, nunca null. */
+  arena: string
   origen: string
 }
 

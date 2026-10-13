@@ -4,7 +4,7 @@ import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
 import type { Arena, Combatiente, ParticipanteDuelo, ResultadoDuelo } from './types'
 
-type Aviso = { kind: 'error' | 'ok' | 'warn'; texto: string } | null
+type Aviso = { kind: 'error' | 'ok'; texto: string } | null
 const MS_POR_TURNO = 620
 
 export default function App() {
@@ -33,8 +33,7 @@ export default function App() {
 
   const retador = elegidos[0]
   const rival = elegidos[1]
-  const fueraDeArena = (c: Combatiente | null) => c !== null && c.arena === null
-  const bloqueado = !retador || !rival || fueraDeArena(retador) || fueraDeArena(rival)
+  const bloqueado = !retador || !rival
   const terminado = duelo !== null && turno >= duelo.turnos.length - 1
 
   function elegir(c: Combatiente) {
@@ -146,8 +145,8 @@ export default function App() {
                   <Bar label="Armadura" valor={c.armadura} max={60} />
                   <Bar label="Daño" valor={Math.round(danoGenerado(c))} max={500} />
                 </div>
-                <div className="card__arena" data-en-arena={c.arena !== null}>
-                  {c.arena ?? 'FUERA DE ARENA'} · {c.combatesGanados}G {c.combatesPerdidos}P
+                <div className="card__arena">
+                  {c.arena} · {c.combatesGanados}G {c.combatesPerdidos}P
                 </div>
               </button>
             ))}
@@ -165,13 +164,9 @@ export default function App() {
 
           <div className="section__body">
             {!retador || !rival ? (
-              <p className="hint">Elegí dos combatientes. Solo pueden pelear los que están en una Arena.</p>
+              <p className="hint">Elegí dos combatientes.</p>
             ) : (
               <>
-                {(fueraDeArena(retador) || fueraDeArena(rival)) && (
-                  <div className="banner" data-kind="warn">Uno de los dos no está en una Arena.</div>
-                )}
-
                 <div className="fight">
                   <Fighter
                     c={retador}

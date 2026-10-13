@@ -42,7 +42,7 @@ npm run build    # typecheck + build de producción a dist/
 
 1. Llama a `GET /api/arena/inscriptos` en las 5 apps **en paralelo** y las une en un roster.
 2. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
-3. Elegís retador y rival (solo los que están en una Arena pueden pelear).
+3. Elegís retador y rival (el roster solo incluye a los que están en una Arena).
 4. `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno.
 5. Al terminar el último turno, **el duelo se registra solo**: le manda `POST /api/arena/duelos` a las apps que poseen a los participantes (1 o 2), con el mismo `idDuelo`, y cada una aplica el veredicto de sus personajes.
 

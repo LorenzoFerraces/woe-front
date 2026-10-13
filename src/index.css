@@ -195,9 +195,7 @@ button:focus-visible {
 
 .bar__value { font-size: 0.7rem; text-align: right; color: var(--text); }
 
-.card__arena { margin-top: 0.6rem; font-size: 0.65rem; letter-spacing: 0.08em; }
-.card__arena[data-en-arena='false'] { color: var(--warn); }
-.card__arena[data-en-arena='true'] { color: var(--ok); }
+.card__arena { margin-top: 0.6rem; font-size: 0.65rem; letter-spacing: 0.08em; color: var(--ok); }
 
 /* ---------------------------------------------------------------- arena de combate */
 
