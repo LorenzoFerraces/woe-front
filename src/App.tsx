@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { cargarArenas, registrarDuelo, roster } from './api'
 import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
-import type { Arena, Combatiente, ResultadoDuelo } from './types'
+import type { Arena, Combatiente, ParticipanteDuelo, ResultadoDuelo } from './types'
 
 type Aviso = { kind: 'error' | 'ok' | 'warn'; texto: string } | null
 const MS_POR_TURNO = 620
@@ -72,14 +72,18 @@ export default function App() {
 
   async function registrar() {
     if (!duelo || !retador || !rival) return
-    const registro = {
-      idDuelo: duelo.idDuelo,
-      idRetador: retador.id,
-      idRival: rival.id,
-      idGanador: duelo.ganadorId,
+    // direcionado: cada app solo recibe los personajes que ELLA posee; un id de otra
+    // app puede ser otro personaje aquí (los ids son locales a cada base)
+    const porOrigen = new Map<string, ParticipanteDuelo[]>()
+    for (const c of [retador, rival]) {
+      const lista = porOrigen.get(c.origen) ?? []
+      lista.push({ id: c.id, resultado: c.id === duelo.ganadorId ? 'GANADOR' : 'PERDEDOR' })
+      porOrigen.set(c.origen, lista)
     }
-    // el mismo idDuelo va a las 5 apps; cada una aplica solo la parte que le corresponde
-    const respuestas = await Promise.all(arenas.map((a) => registrarDuelo(a, registro)))
+    const registros = [...porOrigen.entries()].map(([origen, partes]) =>
+      registrarDuelo(arenas.find((a) => a.label === origen)!, { idDuelo: duelo.idDuelo, participantes: partes }),
+    )
+    const respuestas = await Promise.all(registros)
     const malas = respuestas.filter((r) => !r.ok)
     setAviso(
       malas.length

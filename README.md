@@ -44,7 +44,7 @@ npm run build    # typecheck + build de producción a dist/
 2. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
 3. Elegís retador y rival (solo los que están en una Arena pueden pelear).
 4. `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno.
-5. Al terminar el último turno, **el duelo se registra solo**: manda `POST /api/arena/duelos` a las 5 apps con el mismo `idDuelo`, y cada una aplica la parte que le corresponde.
+5. Al terminar el último turno, **el duelo se registra solo**: le manda `POST /api/arena/duelos` a las apps que poseen a los participantes (1 o 2), con el mismo `idDuelo`, y cada una aplica el veredicto de sus personajes.
 
 ## Arquitectura
 
@@ -80,5 +80,5 @@ Los avatares usan el estilo [Adventurer](https://www.dicebear.com/styles/adventu
 
 ## Notas
 
-- El `POST /api/arena/duelos` va a **las 5 apps**, no solo a las dos involucradas. Es deliberado: cada app ignora los personajes que no posee, así que mandar a todas simplifica el frontend y no puede quedar desincronizado.
+- El `POST /api/arena/duelos` va **direcionado**: solo a las apps que poseen a los participantes. Los ids son locales a cada base (el `id` 7 de una app es otro personaje en otra), así que mandar el mismo body a las cinco aplicaría el duelo sobre personajes equivocados. El body es `{ idDuelo, participantes: [{ id, resultado }] }`.
 - Las APIs deben tener CORS habilitado para el origen de este frontend.

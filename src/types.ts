@@ -29,12 +29,17 @@ export interface Combatiente {
   origen: string
 }
 
-/** Body de POST /api/arena/duelos. El XP NO viaja: lo calcula cada app. */
+/** Body de POST /api/arena/duelos. Direcionado: solo ids de personajes que ESE app posee (los ids son locales a cada base). El XP NO viaja. */
+export type ResultadoParticipante = 'GANADOR' | 'PERDEDOR'
+
+export interface ParticipanteDuelo {
+  id: number
+  resultado: ResultadoParticipante
+}
+
 export interface RegistroDuelo {
   idDuelo: string
-  idRetador: number
-  idRival: number
-  idGanador: number
+  participantes: ParticipanteDuelo[]
 }
 
 export interface Turno {

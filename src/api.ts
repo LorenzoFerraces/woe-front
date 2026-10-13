@@ -19,7 +19,7 @@ export async function roster(arenas: Arena[]): Promise<Combatiente[]> {
   return lists.flat()
 }
 
-/** Le manda el veredicto a una app. Cada app aplica solo la parte que le corresponde. */
+/** Le manda el veredicto del duelo, con SOLO los personajes que esa app posee (un id de otra app puede ser otro personaje aquí). */
 export async function registrarDuelo(
   arena: Arena,
   registro: RegistroDuelo,
