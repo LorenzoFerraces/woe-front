@@ -1,0 +1,8 @@
+node_modules
+dist
+*.tsbuildinfo
+*.local
+.DS_Store
+vite-report
+test-results
+playwright-report

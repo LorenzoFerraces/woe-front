@@ -1,0 +1,9 @@
+{
+  "arenas": [
+    { "id": "crudgpt",   "label": "CrudGPT",               "baseUrl": "http://localhost:8081", "mock": true },
+    { "id": "depers",   "label": "dEPERSion",             "baseUrl": "http://localhost:8082", "mock": true },
+    { "id": "americana", "label": "EPERSiana-Americana",   "baseUrl": "http://localhost:8083", "mock": true },
+    { "id": "rollback", "label": "Rollback-y-a-casa",     "baseUrl": "http://localhost:8084", "mock": true },
+    { "id": "tot",      "label": "Tears-of-the-students", "baseUrl": "http://localhost:8085", "mock": true }
+  ]
+}
