@@ -7,7 +7,9 @@ No es un backend. No tiene base de datos.
 ## Requisitos
 
 - Node 22+
-- Las 5 APIs con el contrato de la Entrega 4 implementado (`GET /api/arena/inscriptos` y `POST /api/arena/duelos`)
+- Las 5 APIs con el contrato del **Taller** implementado (`GET /api/arena/inscriptos` y `POST /api/arena/duelos`)
+
+Para desarrollar la UI **no hace falta ninguna de las APIs**: con `"mock": true` funciona standalone.
 
 ## Setup
 
@@ -40,31 +42,48 @@ npm run build    # typecheck + build de producción a dist/
 
 ## Qué hace
 
-1. Llama a `GET /api/arena/inscriptos` en las 5 apps **en paralelo** y las une en un roster.
-2. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
-3. Elegís retador y rival (el roster solo incluye a los que están en una Arena).
-4. `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno.
+1. Llama a `GET /api/arena/inscriptos` en las 5 apps **en paralelo** y las une en un roster (solo los que están en una Arena).
+2. Marca como **smurf** a los personajes con estadísticas infladas y los bloquea para pelear.
+3. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
+4. Elegís retador y rival, `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno.
 5. Al terminar el último turno, **el duelo se registra solo**: le manda `POST /api/arena/duelos` a las apps que poseen a los participantes (1 o 2), con el mismo `idDuelo`, y cada una aplica el veredicto de sus personajes.
+
+## Detección de smurfs
+
+Un personaje con las estadísticas infladas no debería poder ganar todas las batallas. La detección se calcula **sobre el roster real** (no hay un personaje de referencia fijo), comparando cada uno contra el resto. Si es smurf, la card lleva una **cruz roja y un sello SMURF**, y no se puede seleccionar.
+
+Usa tres señales, porque cada una cubre un hueco distinto:
+
+| Señal | Detecta |
+|---|---|
+| `razonDominancia > 3` | ventaja *relativa* contra el PJ típico. No se puede eludir quedándose un pelo por debajo, y no se envenena si todos inflan parejo. |
+| `dano > mediana × 3` | magnitud extrema frente al cohort. |
+| `dano > 400` | red de seguridad para cuando la **mayoría** de una app infla, caso en que las dos señales relativas se apagan. |
+
+> Límite conocido: un personaje apenas mejor que el promedio (fuerza +20%) gana más combates y **no** es smurf — no debería serlo. La detección apunta a los que rompen la escala, no a los que son un poco buenos.
 
 ## Arquitectura
 
 ```
 arenas.json ──> api.ts ──┐
-                         ├──> App.tsx ──> Chibi.tsx ──> rasgos.ts
-combate.ts <── api.ts ───┘         │
-  └── combate.test.ts             └──> index.css
+                         ├──> App.tsx ──┬──> Chibi.tsx ──> rasgos.ts
+combate.ts <── api.ts ───┘              └──> index.css
+  └── combate.test.ts
 ```
 
-`combate.ts` es una **función pura**: no sabe nada de React ni de la red. Por eso se testea en Node sin navegador y por eso el mismo código alimenta el cálculo y la animación.
+`combate.ts` es una **función pura**: no sabe nada de React ni de la red (las fórmulas y la razón de dominancia viven ahí). Por eso se testea en Node sin navegador y por eso el mismo código alimenta el cálculo y la animación.
 
 ## Tests
 
-7 tests sobre la simulación. Los dos primeros verifican los **ejemplos numéricos del enunciado** (101.8 de daño generado, 135 de daño recibido) — si la especificación cambia, los tests fallan.
+14 tests, sin framework — el runner nativo de Node. Cubren la simulación de combate, la detección de smurfs y el contrato.
+
+- Los dos primeros verifican los **ejemplos numéricos del enunciado** (101.8 de daño generado, 135 de daño recibido) — si la especificación cambia, los tests fallan.
+- Los de smurf verifican las propiedades que la hacen robustas: que subirle los números a *todo* el curso no marca a nadie (invariancia), que un inflado sí se marca, y que sigue detectando cuando una app infla por cantidad hasta envenenar la mediana.
 
 ```bash
 npm test
-# tests 7
-# pass 7
+# tests 14
+# pass 14
 ```
 
 ## Stack
