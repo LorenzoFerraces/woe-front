@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-deep: #120e1e;
   --bg-elevated: #312654;
   --bg-nav: #120e1e;
@@ -196,6 +196,48 @@ button:focus-visible {
 .bar__value { font-size: 0.7rem; text-align: right; color: var(--text); }
 
 .card__arena { margin-top: 0.6rem; font-size: 0.65rem; letter-spacing: 0.08em; color: var(--ok); }
+
+/* ---- smurf: cruz roja + tachado, lo más obvio posible ---- */
+.card--smurf {
+  border-color: var(--error);
+  background: color-mix(in srgb, var(--error) 7%, transparent);
+  cursor: not-allowed;
+  overflow: hidden;
+}
+.card--smurf .card__arena { color: var(--error); }
+.card--smurf:hover { background: color-mix(in srgb, var(--error) 12%, transparent); }
+
+/* cruz: dos diagonales rojas cruzando la card entera */
+.card--smurf::before,
+.card--smurf::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  height: 3px;
+  background: var(--error);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 2;
+}
+.card--smurf::before { transform: translate(-50%, -50%) rotate(45deg); }
+.card--smurf::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* sello SMURF arriba a la derecha */
+.card__smurf {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #fff;
+  background: var(--error);
+  border: 0;
+}
 
 /* ---------------------------------------------------------------- arena de combate */
 

@@ -29,6 +29,36 @@ export function xpPorVictoria(c: Combatiente): number {
   return 10 * c.nivel
 }
 
+/**
+ * Techo de turnos. El daño recibido escala linealmente con las estadísticas,
+ * así que vida/daño es invariante; el problema es que cuando el daño del atacante
+ * empieza a rozar la defensa, la razón se dispara a valores de 5 dígitos y
+ * cualquier corte deja de distinguir. Saturar en 50 turnos ("más que esto es no
+ * lo matan nunca") mantiene la razón interpretable.
+ */
+const TURNOS_MAX = 50
+
+/**
+ * Razón de dominancia contra un oponente representativo: cuántos turnos te aguanta
+ * él por cada turno que vos lo aguantás a él. 1 = parejo, >3 = dominás.
+ *
+ * Es una razón, no un umbral de magnitud: subirle todos los números a todo el curso
+ * no la mueve (la razón queda en 1), mientras que inflarse uno solo la dispara.
+ * Por eso no se puede "quedarse justo por debajo" del corte.
+ */
+export function razonDominancia(c: Combatiente, tipico: Combatiente): number {
+  const meMatan = danoRecibido(tipico, c)
+  const yoMato = danoRecibido(c, tipico)
+  // Ambos términos van de 1 (morís en un turno) a TURNOS_MAX (no te matan nunca).
+  // El piso de 1 turno es lo que acota la razón: sin él, un denominador que tiende
+  // a 0 (daño del atacante → ∞) revienta la división a 5 dígitos.
+  const turnosQueMeAguantan =
+    meMatan <= 0 ? TURNOS_MAX : Math.min(TURNOS_MAX, Math.max(1, c.vida / meMatan))
+  const turnosQueYoAguanto =
+    yoMato <= 0 ? TURNOS_MAX : Math.min(TURNOS_MAX, Math.max(1, tipico.vida / yoMato))
+  return turnosQueMeAguantan / turnosQueYoAguanto
+}
+
 export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuelo {
   let vidaR = retador.vida
   let vidaV = rival.vida

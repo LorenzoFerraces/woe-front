@@ -1,9 +1,50 @@
+import { danoGenerado, razonDominancia } from './combate.ts'
 import type { Arena, Combatiente, RegistroDuelo } from './types'
 
 export async function cargarArenas(): Promise<Arena[]> {
   const res = await fetch('/arenas.json')
   if (!res.ok) throw new Error('No se pudo leer /arenas.json')
   return (await res.json()).arenas
+}
+
+/**
+ * Detecta personajes con estadísticas infladas (los "smurfs"). No es un personaje
+ * fijo: se calcula sobre el roster real, así funciona contra los backends de verdad.
+ *
+ * Combina tres señales, cada una cubre un hueco distinto:
+ *
+ *  - `razonDominancia > 3`: ventaja *relativa* de daño contra el PJ típico. No se
+ *    puede eludir "quedándose un pelo por debajo" si sos extremo, y no se envenena
+ *    si todos inflan *parejo*. Señal principal.
+ *  - `dano > mediana * 3`: magnitud extrema frente al cohort.
+ *  - `dano > PISO_ABSOLUTO`: red de seguridad para cuando la *mayoría* de una app
+ *    infla (la mediana y el PJ típico se corren y las dos señales relativas se
+ *    apagan). Es un valor alto y solo de respaldo; no reemplaza a las relativas.
+ *
+ * Límite conocido: un personaje apenas mejor que el promedio (fuerza+20%) gana más
+ * combates y NO es smurf — no debería serlo. La detección apunta a los que rompen
+ * la escala, no a los que son un poco buenos.
+ */
+const UMBRAL_SMURF = 3
+// Un PJ honesto ronda daño 50-150 con las armas del TP2. 400 está 3x por encima
+// del peor caso normal y por debajo de cualquier inflado real. Es red de seguridad,
+// no criterio principal: los cortes relativos mandan.
+const PISO_ABSOLUTO = 400
+
+export function marcarSmurfs(combatientes: Combatiente[]): Combatiente[] {
+  if (combatientes.length < 3) return combatientes
+  const mediana = combatientes.map(danoGenerado).sort((a, b) => a - b)[Math.floor(combatientes.length / 2)]
+  if (mediana <= 0) return combatientes
+  const tipico = combatientes.reduce((a, b) =>
+    Math.abs(danoGenerado(a) - mediana) <= Math.abs(danoGenerado(b) - mediana) ? a : b,
+  )
+  return combatientes.map((c) => {
+    const d = danoGenerado(c)
+    return {
+      ...c,
+      smurf: razonDominancia(c, tipico) > UMBRAL_SMURF || d > mediana * UMBRAL_SMURF || d > PISO_ABSOLUTO,
+    }
+  })
 }
 
 /** Trae el roster de cada app en paralelo y lo devuelve unificado con el `origen` puesto. */
@@ -16,7 +57,7 @@ export async function roster(arenas: Arena[]): Promise<Combatiente[]> {
       return ((await res.json()) as Combatiente[]).map((c) => ({ ...c, origen: a.label }))
     }),
   )
-  return lists.flat()
+  return marcarSmurfs(lists.flat())
 }
 
 /** Le manda el veredicto del duelo, con SOLO los personajes que esa app posee (un id de otra app puede ser otro personaje aquí). */

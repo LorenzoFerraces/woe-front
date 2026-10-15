@@ -4,7 +4,7 @@ import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
 import type { Arena, Combatiente, ParticipanteDuelo, ResultadoDuelo } from './types'
 
-type Aviso = { kind: 'error' | 'ok'; texto: string } | null
+type Aviso = { kind: 'error' | 'ok' | 'warn'; texto: string } | null
 const MS_POR_TURNO = 620
 
 export default function App() {
@@ -38,6 +38,10 @@ export default function App() {
 
   function elegir(c: Combatiente) {
     if (timer.current) clearInterval(timer.current)
+    if (c.smurf) {
+      setAviso({ kind: 'warn', texto: `${c.nombre} tiene estadísticas infladas (smurf): no puede participar de un duelo.` })
+      return
+    }
     setDuelo(null)
     setTurno(-1)
     setAviso(null)
@@ -127,7 +131,7 @@ export default function App() {
             {inscriptos.map((c) => (
               <button
                 key={`${c.origen}-${c.id}`}
-                className="card"
+                className={`card${c.smurf ? ' card--smurf' : ''}`}
                 aria-pressed={elegidos[0] === c || elegidos[1] === c}
                 onClick={() => elegir(c)}
               >
@@ -148,6 +152,11 @@ export default function App() {
                 <div className="card__arena">
                   {c.arena} · {c.combatesGanados}G {c.combatesPerdidos}P
                 </div>
+                {c.smurf && (
+                  <span className="card__smurf" title="Daño muy por encima del resto del roster. No puede participar de un duelo.">
+                    SMURF
+                  </span>
+                )}
               </button>
             ))}
           </div>

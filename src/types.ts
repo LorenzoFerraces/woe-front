@@ -27,6 +27,8 @@ export interface Combatiente {
   /** El endpoint solo devuelve personajes en arena: nombre de la Arena, nunca null. */
   arena: string
   origen: string
+  /** Referencia de escala absurda, no es un personaje real de ninguna app. */
+  smurf?: boolean
 }
 
 /** Body de POST /api/arena/duelos. Direcionado: solo ids de personajes que ESE app posee (los ids son locales a cada base). El XP NO viaja. */

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { danoGenerado, danoRecibido, simular, xpPorVictoria } from './combate.ts'
+import { danoGenerado, danoRecibido, razonDominancia, simular, xpPorVictoria } from './combate.ts'
+import { marcarSmurfs } from './api.ts'
 import type { Combatiente } from './types.ts'
 
 const guerrero: Combatiente = {
@@ -63,4 +64,94 @@ test('no se cura por encima de la vida máxima', () => {
   for (const t of r.turnos) {
     assert.ok(t.vidaAtacante <= 100 && t.vidaDefensor <= 100, 'nadie supera su vida máxima')
   }
+})
+
+test('marca como smurf al que tiene daño muy por encima de la mediana', () => {
+  // 4 personajes de daño normal y uno con fuerza 999 (daño absurdo)
+  const roster = [
+    ...Array.from({ length: 4 }, (_, i) => rival({ id: i + 1, fuerza: 25 })),
+    rival({ id: 99, nombre: 'Smurf', fuerza: 999 }),
+  ]
+  const marcados = marcarSmurfs(roster)
+  assert.equal(marcados.filter((c) => c.smurf).length, 1, 'solo se marca el inflado')
+  assert.equal(marcados.find((c) => c.id === 99)!.smurf, true)
+  for (const c of marcados.filter((c) => c.id !== 99)) {
+    assert.ok(!c.smurf, 'un personaje normal no se marca')
+  }
+})
+
+test('no marca smurf en un roster chico o uniforme', () => {
+  const roster = Array.from({ length: 5 }, (_, i) => rival({ id: i + 1, fuerza: 25 }))
+  assert.equal(marcarSmurfs(roster).filter((c) => c.smurf).length, 0)
+  assert.equal(marcarSmurfs([rival(), rival({ id: 2 })]).length, 2, 'roster chico se devuelve tal cual')
+})
+
+const escalar = (c: Combatiente, f: number): Combatiente => {
+  const s = {
+    fuerza: Math.round(c.fuerza * f),
+    destreza: Math.round(c.destreza * f),
+    armadura: Math.round(c.armadura * f),
+    vida: Math.round(c.vida * f),
+    danoArmaDerecha: Math.round(c.danoArmaDerecha * f),
+    danoArmaIzquierda: Math.round(c.danoArmaIzquierda * f),
+  }
+  return { ...c, ...s }
+}
+
+test('la razón de dominancia no cambia si TODOS se inflan por igual', () => {
+  // Es la propiedad que hace la métrica inmune al veneno de la mediana:
+  // inflar todo el curso no genera ventaja, porque nadie queda por encima de nadie.
+  const base = rival({ id: 1 })
+  assert.equal(razonDominancia(base, base), 1)
+  assert.equal(razonDominancia(escalar(base, 2), escalar(base, 2)), 1)
+  assert.equal(razonDominancia(escalar(base, 100), escalar(base, 100)), 1)
+})
+
+test('la razón se dispara cuando uno solo se infla', () => {
+  const base = rival({ id: 1 })
+  const r1 = razonDominancia(escalar(base, 1.5), base)
+  const r4 = razonDominancia(escalar(base, 4), base)
+  // No exigimos monotonicidad estricta: al saturar en TURNOS_MAX la razón se aplana
+  // (x2 y x4 dan lo mismo), que es justo lo que la hace acotada e interpretable.
+  assert.ok(r1 > 3, 'x1.5 ya supera el corte de 3 contra este PJ típico')
+  assert.ok(r4 >= r1, 'más inflado no baja la razón')
+  assert.ok(r4 <= 50, 'r4 acotada')
+})
+
+test('la razón queda acotada: el corte es interpretable', () => {
+  // Sin saturar, la razón se dispara a 5 dígitos y cualquier corte deja de distinguir.
+  const base = rival({ id: 1 })
+  const r = razonDominancia(escalar(base, 1000), base)
+  assert.ok(r <= 50, `razon acotada (fue ${r})`)
+})
+
+test('detecta el inflado aunque una app haya creado muchos', () => {
+  // El ataque real: una app que infla por cantidad para envenenar la mediana.
+  // Con 16 de 36 inflados la mediana se va y la magnitud sola no ve nada.
+  const normales = Array.from({ length: 20 }, (_, i) => rival({ id: i + 1 }))
+  const inflados = normales.slice(0, 16).map((c, i) => ({ ...escalar(c, 4), id: 100 + i }))
+  const marcados = marcarSmurfs([...normales, ...inflados])
+  const detectados = marcados.filter((c) => c.smurf).length
+  assert.ok(detectados >= 14, `debe ver casi todos los inflados (vio ${detectados})`)
+})
+
+test('detecta el inflado cuando la MAYORÍA de una app infla', () => {
+  // Caso extremo: 20 de 24 inflados. La mediana y el PJ típico son ambos inflados,
+  // así que las dos señales relativas se apagan. Solo el piso absoluto lo ve.
+  const inflados = Array.from({ length: 20 }, (_, i) => ({
+    ...escalar(rival({ id: i + 1 }), 6),
+    id: i + 1,
+  }))
+  const normales = Array.from({ length: 4 }, (_, i) => rival({ id: 200 + i }))
+  const marcados = marcarSmurfs([...inflados, ...normales])
+  const deInflado = marcados.filter((c) => c.id <= 20)
+  const deNormal = marcados.filter((c) => c.id > 200)
+  assert.ok(
+    deInflado.filter((c) => c.smurf).length >= 18,
+    `debe ver casi todos los inflados (vio ${deInflado.filter((c) => c.smurf).length}/20)`,
+  )
+  assert.ok(
+    deNormal.every((c) => !c.smurf),
+    'no debe marcar a los normales en un roster mayoritariamente inflado',
+  )
 })
