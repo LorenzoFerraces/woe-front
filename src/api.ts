@@ -21,9 +21,12 @@ function urlDuelosDe(url: string): string {
   return url.replace(/\/inscriptos\/?$/, '/duelos')
 }
 
-function resolver(cfg: ArenaConfig): Arena {
-  const label = cfg.label ?? etiquetaDe(cfg.url)
-  return { id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'), label, url: cfg.url, urlDuelos: urlDuelosDe(cfg.url), mock: cfg.mock }
+export function resolver(cfg: ArenaConfig): Arena {
+  // El config es del propio curso: sin scheme, fetch sale relativo y pega 404 al localhost.
+  // Completarlo es más simple que exigirlo en la doc.
+  const url = /^\w+:\/\//.test(cfg.url) ? cfg.url : `http://${cfg.url}`
+  const label = cfg.label ?? etiquetaDe(url)
+  return { id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'), label, url, urlDuelos: urlDuelosDe(url), mock: cfg.mock }
 }
 
 export async function cargarArenas(): Promise<Arena[]> {

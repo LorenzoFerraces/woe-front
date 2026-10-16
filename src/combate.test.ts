@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { danoGenerado, danoRecibido, probCritico, razonDominancia, simular, xpPorVictoria } from './combate.ts'
-import { etiquetaDe, marcarSmurfs, palmares } from './api.ts'
+import { etiquetaDe, marcarSmurfs, palmares, resolver } from './api.ts'
 import type { Combatiente } from './types.ts'
 
 const guerrero: Combatiente = {
@@ -217,4 +217,17 @@ test('palmares: corta en el top 7', () => {
   const p = palmares(Array.from({ length: 10 }, (_, i) => `app${i}`))
   assert.equal(p.length, 7)
   assert.equal(p[0].origen, 'app0', 'empatados en 1: orden alfabético')
+})
+
+test('resolver: completa el scheme si no viene (fetch relativo = 404 al localhost)', () => {
+  const a = resolver({ url: 'vela-20a027dd8bc56e67.velaunq.ddns.net/api/arena/inscriptos', label: 'CrudGPT' })
+  assert.equal(a.url, 'http://vela-20a027dd8bc56e67.velaunq.ddns.net/api/arena/inscriptos')
+  assert.equal(a.urlDuelos, 'http://vela-20a027dd8bc56e67.velaunq.ddns.net/api/arena/duelos')
+  assert.equal(a.label, 'CrudGPT')
+})
+
+test('resolver: respeta un scheme explícito y deriva label del subdominio', () => {
+  const a = resolver({ url: 'https://crudgpt.dominio.local/api/arena/inscriptos' })
+  assert.equal(a.url, 'https://crudgpt.dominio.local/api/arena/inscriptos')
+  assert.equal(a.label, 'crudgpt')
 })

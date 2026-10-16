@@ -1,9 +1,19 @@
 {
   "arenas": [
-    { "url": "http://localhost:8081/api/arena/inscriptos", "label": "CrudGPT", "mock": true },
-    { "url": "http://localhost:8082/api/arena/inscriptos", "label": "dEPERSion", "mock": true },
-    { "url": "http://localhost:8083/api/arena/inscriptos", "label": "EPERSiana-Americana", "mock": true },
-    { "url": "http://localhost:8084/api/arena/inscriptos", "label": "Rollback-y-a-casa", "mock": true },
-    { "url": "http://localhost:8085/api/arena/inscriptos", "label": "Tears-of-the-students", "mock": true }
+    {
+      "url": "https://vela-20a027dd8bc56e67.velaunq.ddns.net/api/arena/inscriptos",
+      "label": "CrudGPT",
+      "mock": false
+    },
+    {
+      "url": "https://vela-40b756eb2d908644.velaunq.ddns.net/api/arena/inscriptos",
+      "label": "dEPERSion",
+      "mock": true
+    },
+    {
+      "url": "https://vela-236022abbfd76aa2.velaunq.ddns.net/api/arena/inscriptos",
+      "label": "Rollback-y-a-casa",
+      "mock": false
+    }
   ]
 }
