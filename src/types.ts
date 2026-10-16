@@ -61,6 +61,8 @@ export interface Turno {
   atacanteOrigen: string
   danoGenerado: number
   danoRecibido: number
+  /** Extensión: el ataque salió crítico (doble daño). No viaja al backend. */
+  critico?: boolean
   vidaAtacante: number
   vidaDefensor: number
 }

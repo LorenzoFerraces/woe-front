@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { danoGenerado, danoRecibido, razonDominancia, simular, xpPorVictoria } from './combate.ts'
+import { danoGenerado, danoRecibido, probCritico, razonDominancia, simular, xpPorVictoria } from './combate.ts'
 import { etiquetaDe, marcarSmurfs } from './api.ts'
 import type { Combatiente } from './types.ts'
 
@@ -154,6 +154,40 @@ test('detecta el inflado cuando la MAYORÍA de una app infla', () => {
     deNormal.every((c) => !c.smurf),
     'no debe marcar a los normales en un roster mayoritariamente inflado',
   )
+})
+
+test('prob de crítico: 5% base + 0.75% por destreza, con techo anti-smurf de 40%', () => {
+  assert.equal(probCritico(rival({ destreza: 0 })), 0.05)
+  assert.equal(Math.round(probCritico(guerrero) * 1000) / 1000, 0.2) // destreza 20
+  assert.equal(probCritico(rival({ destreza: 999 })), 0.4, 'el techo acota a los inflados')
+})
+
+test('RNG siempre crítico: el daño se duplica y el turno se marca', () => {
+  const base = danoRecibido(guerrero, rival())
+  const r = simular(guerrero, rival(), () => 0)
+  assert.ok(r.turnos.length > 0)
+  for (const t of r.turnos) {
+    assert.ok(t.critico, 'el turno queda marcado como crítico')
+    if (t.danoRecibido > 0) assert.equal(t.danoRecibido, base * 2, 'el daño salta al doble')
+  }
+})
+
+test('RNG nunca crítico: daño normal y sin marca', () => {
+  const base = danoRecibido(guerrero, rival())
+  const r = simular(guerrero, rival(), () => 0.999)
+  for (const t of r.turnos) {
+    assert.ok(!t.critico)
+    if (t.danoRecibido > 0) assert.equal(t.danoRecibido, base)
+  }
+})
+
+test('el crítico no se aplica al daño negativo ("curación")', () => {
+  const r = simular(
+    rival({ id: 1, fuerza: 10, armadura: 10000, vida: 100 }),
+    rival({ id: 2, fuerza: 10, armadura: 10000, vida: 100 }),
+    () => 0,
+  )
+  assert.ok(r.turnos.every((t) => !t.critico), 'nadie critica devolviendo energía')
 })
 
 test('deriva la etiqueta del host de la URL', () => {
