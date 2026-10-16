@@ -1,9 +1,9 @@
 {
   "arenas": [
-    { "id": "crudgpt",   "label": "CrudGPT",               "baseUrl": "http://localhost:8081", "mock": true },
-    { "id": "depers",   "label": "dEPERSion",             "baseUrl": "http://localhost:8082", "mock": true },
-    { "id": "americana", "label": "EPERSiana-Americana",   "baseUrl": "http://localhost:8083", "mock": true },
-    { "id": "rollback", "label": "Rollback-y-a-casa",     "baseUrl": "http://localhost:8084", "mock": true },
-    { "id": "tot",      "label": "Tears-of-the-students", "baseUrl": "http://localhost:8085", "mock": true }
+    { "url": "http://localhost:8081/api/arena/inscriptos", "label": "CrudGPT", "mock": true },
+    { "url": "http://localhost:8082/api/arena/inscriptos", "label": "dEPERSion", "mock": true },
+    { "url": "http://localhost:8083/api/arena/inscriptos", "label": "EPERSiana-Americana", "mock": true },
+    { "url": "http://localhost:8084/api/arena/inscriptos", "label": "Rollback-y-a-casa", "mock": true },
+    { "url": "http://localhost:8085/api/arena/inscriptos", "label": "Tears-of-the-students", "mock": true }
   ]
 }

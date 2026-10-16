@@ -1,10 +1,36 @@
 import { danoGenerado, razonDominancia } from './combate.ts'
-import type { Arena, Combatiente, RegistroDuelo } from './types'
+import type { Arena, ArenaConfig, Combatiente, RegistroDuelo } from './types'
+
+/**
+ * Nombre visible de una arena, a partir del host de la URL.
+ * `crudgpt.localhost:8081/api/...` -> `crudgpt`; `localhost:8081/api/...` -> `localhost:8081`.
+ */
+export function etiquetaDe(url: string): string {
+  try {
+    const { hostname, port } = new URL(url)
+    const [subdominio, ...resto] = hostname.split('.')
+    if (resto.length === 0) return port ? `${subdominio}:${port}` : subdominio
+    return subdominio
+  } catch {
+    return url
+  }
+}
+
+/** De la URL de `inscriptos` saca la de `duelos`: mismo prefijo, otro recurso final. */
+function urlDuelosDe(url: string): string {
+  return url.replace(/\/inscriptos\/?$/, '/duelos')
+}
+
+function resolver(cfg: ArenaConfig): Arena {
+  const label = cfg.label ?? etiquetaDe(cfg.url)
+  return { id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'), label, url: cfg.url, urlDuelos: urlDuelosDe(cfg.url), mock: cfg.mock }
+}
 
 export async function cargarArenas(): Promise<Arena[]> {
   const res = await fetch('/arenas.json')
   if (!res.ok) throw new Error('No se pudo leer /arenas.json')
-  return (await res.json()).arenas
+  const { arenas } = (await res.json()) as { arenas: ArenaConfig[] }
+  return arenas.map(resolver)
 }
 
 /**
@@ -52,7 +78,7 @@ export async function roster(arenas: Arena[]): Promise<Combatiente[]> {
   const lists = await Promise.all(
     arenas.map(async (a) => {
       if (a.mock) return rosterMock(a)
-      const res = await fetch(`${a.baseUrl}/api/arena/inscriptos`)
+      const res = await fetch(a.url)
       if (!res.ok) return []
       return ((await res.json()) as Combatiente[]).map((c) => ({ ...c, origen: a.label }))
     }),
@@ -66,7 +92,7 @@ export async function registrarDuelo(
   registro: RegistroDuelo,
 ): Promise<{ ok: boolean; status: number }> {
   if (arena.mock) return { ok: true, status: 200 }
-  const res = await fetch(`${arena.baseUrl}/api/arena/duelos`, {
+  const res = await fetch(arena.urlDuelos, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(registro),

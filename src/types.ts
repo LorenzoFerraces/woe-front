@@ -1,10 +1,21 @@
 /** Contrato compartido — ver docs/superpowers/specs/2026-10-12-arena-multiaplicador-design.md */
 
+/** Lo que se pega en arenas.json: solo la URL del endpoint de lectura. */
+export interface ArenaConfig {
+  /** URL completa de GET /api/arena/inscriptos. La de POST sale de acá. */
+  url: string
+  /** Nombre visible. Si no se pone, se deriva del host de la URL. */
+  label?: string
+  /** true = datos falsos en memoria, sin llamar al backend. Solo para developear el frontend. */
+  mock?: boolean
+}
+
+/** Arena ya resuelta: las dos URLs y la etiqueta, derivadas de la config. */
 export interface Arena {
   id: string
   label: string
-  baseUrl: string
-  /** true = datos falsos en memoria, sin llamar al backend. Solo para developear el frontend. */
+  url: string
+  urlDuelos: string
   mock?: boolean
 }
 

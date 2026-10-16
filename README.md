@@ -22,15 +22,23 @@ Abre `http://localhost:5173`.
 
 ## Configuración: las URLs de las 5 apps
 
-`public/arenas.json` — se edita **sin rebuild**, recargás el browser y al día:
+`public/arenas.json` — se edita **sin rebuild**, recargás el browser y al día. Solo hay que pegar la URL del endpoint de lectura; la de escritura y el nombre se derivan solos:
 
 ```json
 { "arenas": [
-  { "id": "crudgpt", "label": "CrudGPT", "baseUrl": "http://localhost:8081", "mock": true }
+  { "url": "http://localhost:8081/api/arena/inscriptos", "mock": true }
 ]}
 ```
 
-Con `"mock": true` la app genera 4 personajes falsos por backend y **no hace ninguna llamada de red**. Sirve para desarrollar la UI sin las APIs arriba. Ponelo en `false` y poné las URLs reales para trabajar contra datos de verdad.
+| Campo | Obligatorio | Qué hace |
+|---|---|---|
+| `url` | sí | URL completa de `GET /inscriptos`. La de `POST /duelos` sale de ahí reemplazando el recurso final. |
+| `label` | no | Nombre visible en la card. Si no lo ponés, se deriva del host: `http://crudgpt.dominio.local/...` → **crudgpt**. |
+| `mock` | no | `true` = datos falsos en memoria, **sin ninguna llamada de red**. Para desarrollar la UI sin las APIs arriba. |
+
+Con `"mock": true` la app genera 4 personajes falsos por backend y no toca la red. Ponelo en `false` con las URLs reales para trabajar contra datos de verdad.
+
+> Si las URLs reales van por subdominio (`crudgpt.dominio.local`), podés borrar el `label` y sale solo del host. Si van todas por `localhost:puerto` el `label` hace falta, porque si no las 5 se llamarían igual.
 
 ## Scripts
 

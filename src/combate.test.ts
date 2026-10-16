@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { danoGenerado, danoRecibido, razonDominancia, simular, xpPorVictoria } from './combate.ts'
-import { marcarSmurfs } from './api.ts'
+import { etiquetaDe, marcarSmurfs } from './api.ts'
 import type { Combatiente } from './types.ts'
 
 const guerrero: Combatiente = {
@@ -154,4 +154,12 @@ test('detecta el inflado cuando la MAYORÍA de una app infla', () => {
     deNormal.every((c) => !c.smurf),
     'no debe marcar a los normales en un roster mayoritariamente inflado',
   )
+})
+
+test('deriva la etiqueta del host de la URL', () => {
+  assert.equal(etiquetaDe('http://crudgpt.localhost:8081/api/arena/inscriptos'), 'crudgpt')
+  assert.equal(etiquetaDe('https://tots.dominio.local/api/arena/inscriptos'), 'tots')
+  // localhost a secas no sirve como nombre: se cae al host:port para que se distinguan
+  assert.equal(etiquetaDe('http://localhost:8081/api/arena/inscriptos'), 'localhost:8081')
+  assert.equal(etiquetaDe('no-es-una-url'), 'no-es-una-url', 'no explota con basura')
 })
