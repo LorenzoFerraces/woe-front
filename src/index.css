@@ -416,3 +416,97 @@ button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .chibi { animation: none; }
 }
+/* Escena de combate. El dialog mantiene el foco y bloquea el fondo. */
+.battle-overlay {
+  position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none;
+  margin: 0; padding: clamp(16px, 4vh, 48px) clamp(16px, 5vw, 80px); border: 0;
+  color: var(--text-heading); background: transparent; overflow-y: auto;
+}
+.battle-overlay::backdrop { background: rgb(0 0 0 / 88%); backdrop-filter: blur(5px); }
+.battle-content { width: min(1050px, 100%); min-height: 100%; margin: auto; display: flex; flex-direction: column; justify-content: center; }
+.battle-header { text-align: center; }
+.battle-eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .22em; }
+.battle-header h2 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 46px); margin: 12px 0 6px; line-height: 1.15; }
+.battle-header p { color: var(--text-muted); font-size: 12px; margin: 0; }
+.battle-header p span { color: var(--accent); margin: 0 12px; }
+.battle-scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 12vw, 180px); margin-top: 32px; }
+.battle-health > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+.battle-health strong { font-size: clamp(16px, 2vw, 23px); }
+.battle-health span, .battle-health small { font-size: 11px; color: var(--text-muted); }
+.battle-health-track { height: 8px; background: rgb(255 255 255 / 12%); overflow: hidden; }
+.battle-health-track > span { display: block; width: 100%; height: 100%; background: var(--accent); transform-origin: left; transition: transform 450ms ease; box-shadow: 0 0 20px var(--accent); }
+.battle-health:last-child .battle-health-track > span { background: var(--ok); transform-origin: right; }
+.battle-health:last-child { text-align: right; }
+.battle-stage { position: relative; isolation: isolate; min-height: 340px; height: min(43vh, 430px); margin: 12px 0 0; }
+.battle-stage::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 85%, rgb(153 69 217 / 14%), transparent 65%); }
+.battle-ring { position: absolute; left: 8%; right: 8%; height: 100px; bottom: 28px; border: 1px solid rgb(188 127 237 / 24%); border-radius: 50%; background: repeating-radial-gradient(ellipse, transparent 0 24px, rgb(188 127 237 / 5%) 25px 26px); box-shadow: 0 0 80px rgb(153 69 217 / 9%); }
+.battle-position { position: absolute; left: 19%; bottom: 45px; width: 140px; text-align: center; --direction: 1; --armor: #7352a3; --armor-light: #ba95e7; --reach: clamp(40px, 24vw, 340px); }
+.battle-position[data-side='right'] { left: auto; right: 19%; --direction: -1; --armor: #286458; --armor-light: #7ac4a3; }
+.battle-puppet { position: relative; width: 140px; height: 230px; transform-origin: 50% 95%; }
+.puppet-body { position: absolute; inset: 0; transform: scaleX(var(--direction)); }
+.puppet-head { position: absolute; top: -4px; left: 14px; z-index: 4; filter: drop-shadow(0 8px 8px rgb(0 0 0 / 40%)); }
+.puppet-head .chibi { animation: none; }
+.puppet-shadow { position: absolute; bottom: -3px; left: 4px; width: 130px; height: 20px; border-radius: 50%; background: rgb(0 0 0 / 65%); filter: blur(5px); }
+.puppet-torso { position: absolute; top: 87px; left: 39px; width: 65px; height: 79px; border-radius: 24px 24px 15px 15px; border: 3px solid var(--armor-light); background: linear-gradient(110deg, var(--armor-light), var(--armor) 45%); box-shadow: inset -12px -5px 0 rgb(0 0 0 / 18%); }
+.puppet-torso span { display: block; position: absolute; left: -4px; right: -4px; bottom: 10px; height: 13px; background: #282136; border: 2px solid #a39a7d; }
+.puppet-torso span::after { content: ''; display: block; width: 13px; height: 13px; margin: -2px auto; border: 3px solid #e9c879; background: #735b2e; }
+.puppet-leg { position: absolute; top: 153px; width: 26px; height: 66px; background: #292334; border: 2px solid #645c78; border-radius: 6px 6px 10px 10px; transform-origin: top; }
+.puppet-leg::after { content: ''; position: absolute; left: -3px; bottom: -7px; width: 37px; height: 22px; border-radius: 6px 16px 5px 5px; background: #393042; border-bottom: 4px solid #b39b6f; }
+.puppet-leg--back { left: 44px; transform: rotate(10deg); }
+.puppet-leg--front { left: 77px; transform: rotate(-12deg); }
+.puppet-arm { position: absolute; top: 96px; width: 26px; height: 61px; border-radius: 16px; border: 2px solid var(--armor-light); background: var(--armor); transform-origin: 50% 13%; }
+.puppet-arm--back { left: 24px; transform: rotate(20deg); z-index: 1; }
+.puppet-arm--front { left: 94px; transform: rotate(-25deg); z-index: 5; }
+.puppet-shield { position: absolute; top: 22px; left: -19px; width: 48px; height: 58px; background: linear-gradient(135deg, var(--armor-light), var(--armor)); border: 4px solid #d8c493; border-radius: 40% 40% 50% 50%; }
+.puppet-shield::after { content: ''; position: absolute; inset: 8px 17px; background: #d8c493; }
+.puppet-sword { position: absolute; top: -48px; left: 11px; width: 12px; height: 86px; background: linear-gradient(90deg, #a9b3c6 50%, #f2f2ff 50%); clip-path: polygon(50% 0, 100% 14%, 100% 100%, 0 100%, 0 14%); transform: rotate(25deg); transform-origin: 50% 100%; }
+.battle-name { display: inline-block; margin-top: 13px; font-size: 12px; letter-spacing: .08em; color: var(--text-muted); }
+.battle-versus { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); font: clamp(36px, 8vw, 80px) var(--font-display); color: var(--accent); animation: battle-intro 1.2s both; }
+.battle-puppet[data-action='ready'] { animation: puppet-enter 1s ease-out both; }
+.battle-puppet[data-action='attack'] { animation: puppet-charge 850ms cubic-bezier(.3,0,.3,1) both; }
+.battle-puppet[data-action='attack'] .puppet-arm--front { animation: puppet-swing 850ms ease-in-out both; }
+.battle-puppet[data-action='hit'] { animation: puppet-hit 850ms ease-out both; }
+.battle-puppet[data-action='heal'] { animation: puppet-heal 850ms ease-out both; }
+.battle-puppet[data-action='ko'] { animation: puppet-ko 900ms 300ms ease-in both; }
+.battle-damage { position: absolute; z-index: 6; left: 48px; top: 10px; color: #ff8d88; text-shadow: 0 3px 12px #000; font: 36px var(--font-display); animation: battle-damage 1.15s 320ms both; }
+.battle-damage[data-healing='true'] { color: var(--ok); }
+.battle-impact { position: absolute; z-index: 5; top: 93px; left: 47px; width: 70px; height: 70px; color: #ffe7b0; filter: drop-shadow(0 0 16px #ffbb73); animation: battle-impact 500ms 300ms both; }
+.battle-impact svg { width: 100%; height: 100%; fill: currentColor; }
+.battle-victory { position: absolute; z-index: 8; left: 50%; top: 15%; transform: translateX(-50%); width: max-content; max-width: 95%; text-align: center; padding: 18px 40px; background: rgb(10 7 18 / 90%); border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); animation: battle-result 900ms both; }
+.battle-victory span { display: block; font-size: 11px; letter-spacing: .35em; color: var(--accent); }
+.battle-victory strong { display: block; font: clamp(26px, 4vw, 42px) var(--font-display); }
+.battle-victory small { color: var(--ok); }
+.battle-footer { text-align: center; min-height: 100px; }
+.battle-footer p { color: var(--text-muted); font-size: 12px; min-height: 36px; }
+.battle-footer .btn { min-height: 44px; }
+@keyframes battle-intro { from { opacity: 0; transform: translate(-50%, -50%) scale(1.6); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes puppet-enter { from { opacity: 0; transform: translateX(calc(var(--direction) * -80px)); } to { opacity: 1; transform: translateX(0); } }
+@keyframes puppet-charge { 0%, 15%, 100% { transform: translateX(0) rotate(0); } 40%, 58% { transform: translateX(calc(var(--direction) * var(--reach))) rotate(calc(var(--direction) * 8deg)); } }
+@keyframes puppet-swing { 0%, 15%, 100% { transform: rotate(-25deg); } 42%, 60% { transform: rotate(-110deg); } }
+@keyframes puppet-hit { 0%, 32%, 100% { transform: translateX(0); filter: none; } 43% { transform: translateX(calc(var(--direction) * -18px)) rotate(calc(var(--direction) * -8deg)); filter: brightness(1.7); } 60% { transform: translateX(calc(var(--direction) * -8px)); } }
+@keyframes puppet-heal { 0%, 100% { filter: none; } 45% { filter: drop-shadow(0 0 20px #4ade80); } }
+@keyframes puppet-ko { to { transform: translateY(18px) rotate(calc(var(--direction) * -65deg)); opacity: .35; filter: grayscale(1); } }
+@keyframes battle-damage { from { opacity: 0; transform: translateY(0) scale(.6); } 20% { opacity: 1; transform: translateY(-15px) scale(1.2); } to { opacity: 0; transform: translateY(-80px) scale(1); } }
+@keyframes battle-impact { from { opacity: 0; transform: scale(.2); } 25% { opacity: 1; transform: scale(1.2) rotate(15deg); } to { opacity: 0; transform: scale(1.6) rotate(35deg); } }
+@keyframes battle-result { from { opacity: 0; translate: 0 15px; } to { opacity: 1; translate: 0 0; } }
+@media (max-width: 600px) {
+  .battle-overlay { padding: 24px 16px; }
+  .battle-eyebrow { font-size: 9px; letter-spacing: .12em; }
+  .battle-scoreboard { gap: 28px; margin-top: 24px; }
+  .battle-health span { font-size: 9px; }
+  .battle-stage { min-height: 300px; height: 34vh; }
+  .battle-position { left: 0; --reach: 90px; scale: .78; transform-origin: left bottom; }
+  .battle-position[data-side='right'] { right: 0; transform-origin: right bottom; }
+  .battle-ring { left: 0; right: 0; }
+  .battle-victory { padding: 14px 24px; top: 8%; }
+  .battle-footer p { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle-overlay *, .battle-overlay *::before, .battle-overlay *::after { animation: none !important; transition: none !important; }
+  .battle-puppet[data-action='ko'] { opacity: .35; filter: grayscale(1); }
+  .battle-impact, .battle-damage { display: none; }
+}
+@media (max-width: 600px) {
+  .battle-puppet[data-action='ko'] { animation-name: puppet-ko-mobile; }
+}
+@keyframes puppet-ko-mobile { to { transform: translateX(calc(var(--direction) * 30px)) translateY(12px) rotate(calc(var(--direction) * -25deg)); opacity: .35; filter: grayscale(1); } }

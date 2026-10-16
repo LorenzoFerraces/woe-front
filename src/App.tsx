@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { cargarArenas, registrarDuelo, roster } from './api'
 import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
+import { BattleOverlay } from './BattleOverlay'
 import type { Arena, Combatiente, ParticipanteDuelo, ResultadoDuelo } from './types'
 
 type Aviso = { kind: 'error' | 'ok' | 'warn'; texto: string } | null
-const MS_POR_TURNO = 620
+const DURACION_COMBATE = 10_000
+const ENTRADA_COMBATE = 1_200
+const FIN_ATAQUES = 8_800
 
 export default function App() {
   const [arenas, setArenas] = useState<Arena[]>([])
@@ -13,6 +16,8 @@ export default function App() {
   const [elegidos, setElegidos] = useState<[Combatiente | null, Combatiente | null]>([null, null])
   const [duelo, setDuelo] = useState<ResultadoDuelo | null>(null)
   const [turno, setTurno] = useState(-1)
+  const [escena, setEscena] = useState(false)
+  const [animando, setAnimando] = useState(false)
   const [aviso, setAviso] = useState<Aviso>(null)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -33,10 +38,11 @@ export default function App() {
 
   const retador = elegidos[0]
   const rival = elegidos[1]
-  const bloqueado = !retador || !rival
-  const terminado = duelo !== null && turno >= duelo.turnos.length - 1
+  const bloqueado = !retador || !rival || animando
+  const terminado = duelo !== null && !animando && turno >= duelo.turnos.length - 1
 
   function elegir(c: Combatiente) {
+    if (animando) return
     if (timer.current) clearInterval(timer.current)
     if (c.smurf) {
       setAviso({ kind: 'warn', texto: `${c.nombre} tiene estadísticas infladas (smurf): no puede participar de un duelo.` })
@@ -49,6 +55,8 @@ export default function App() {
   }
 
   function limpiar() {
+    if (animando) return
+    setEscena(false)
     if (timer.current) clearInterval(timer.current)
     setElegidos([null, null])
     setDuelo(null)
@@ -57,20 +65,29 @@ export default function App() {
   }
 
   function pelear() {
-    if (!retador || !rival) return
+    if (!retador || !rival || animando) return
+    if (timer.current) clearInterval(timer.current)
     const resultado = simular(retador, rival)
     setDuelo(resultado)
     setAviso(null)
-    setTurno(0)
+    setTurno(-1)
+    setEscena(true)
+    setAnimando(true)
+    const inicio = performance.now()
     timer.current = setInterval(() => {
-      setTurno((t) => {
-        if (t >= resultado.turnos.length - 1) {
-          if (timer.current) clearInterval(timer.current)
-          return t
-        }
-        return t + 1
-      })
-    }, MS_POR_TURNO)
+      const transcurrido = performance.now() - inicio
+      if (transcurrido < ENTRADA_COMBATE) return
+      const avance = Math.min(1, (transcurrido - ENTRADA_COMBATE) / (FIN_ATAQUES - ENTRADA_COMBATE))
+      // En duelos largos se muestran hasta ocho golpes representativos en los mismos diez segundos.
+      const golpesVisibles = Math.min(8, resultado.turnos.length)
+      const golpe = Math.min(golpesVisibles - 1, Math.floor(avance * golpesVisibles))
+      setTurno(golpesVisibles === 1 ? 0 : Math.round(golpe * (resultado.turnos.length - 1) / (golpesVisibles - 1)))
+      if (transcurrido >= DURACION_COMBATE) {
+        if (timer.current) clearInterval(timer.current)
+        timer.current = null
+        setAnimando(false)
+      }
+    }, 40)
   }
 
   async function registrar() {
@@ -116,6 +133,10 @@ export default function App() {
 
   return (
     <div className="app">
+      {escena && duelo && retador && rival && (
+        <BattleOverlay retador={retador} rival={rival} duelo={duelo} turno={turno}
+          terminado={terminado} aviso={aviso?.texto} onClose={() => setEscena(false)} />
+      )}
       <nav className="nav">
         <div className="nav__title">ARENA <span>MULTIAPLICADOR</span></div>
         <div className="nav__meta">{inscriptos.length} combatientes · {arenas.length} apps</div>
@@ -169,7 +190,7 @@ export default function App() {
             <span>Duelo</span>
             <div className="actions">
               <button className="btn" disabled={bloqueado} onClick={pelear}>Pelear</button>
-              <button className="btn btn--ghost" onClick={limpiar}>Limpiar</button>
+              <button className="btn btn--ghost" disabled={animando} onClick={limpiar}>Limpiar</button>
             </div>
           </div>
 
