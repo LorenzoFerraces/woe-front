@@ -1,9 +1,29 @@
 {
   "arenas": [
-    { "url": "http://localhost:8081/api/arena/inscriptos", "label": "CrudGPT", "mock": true },
-    { "url": "http://localhost:8082/api/arena/inscriptos", "label": "dEPERSion", "mock": true },
-    { "url": "http://localhost:8083/api/arena/inscriptos", "label": "EPERSiana-Americana", "mock": true },
-    { "url": "http://localhost:8084/api/arena/inscriptos", "label": "Rollback-y-a-casa", "mock": true },
-    { "url": "http://localhost:8085/api/arena/inscriptos", "label": "Tears-of-the-students", "mock": true }
+    {
+      "label": "El bosque no para",
+      "mock": true,
+      "url": "http://localhost:8081/api/arena/inscriptos"
+    },
+    {
+      "label": "Los compiladores",
+      "mock": true,
+      "url": "http://localhost:8082/api/arena/inscriptos"
+    },
+    {
+      "label": "PostreSQL",
+      "mock": true,
+      "url": "http://localhost:8083/api/arena/inscriptos"
+    },
+    {
+      "label": "The last JOIN us",
+      "mock": true,
+      "url": "http://localhost:8084/api/arena/inscriptos"
+    },
+    {
+      "label": "La comunidad del query",
+      "mock": true,
+      "url": "http://localhost:8085/api/arena/inscriptos"
+    }
   ]
 }
