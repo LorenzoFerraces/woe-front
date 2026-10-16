@@ -69,7 +69,7 @@ export function BattleOverlay({ retador, rival, duelo, turno, terminado, aviso, 
                 </div>
                 <div className="puppet-head"><Chibi c={c} size={112} /></div>
                 {paso && !ataca(c) && (
-                  <span className="battle-damage" data-healing={paso.danoRecibido < 0 || undefined}>
+                  <span className="battle-damage" data-healing={paso.danoRecibido < 0 || undefined} data-crit={paso.critico || undefined}>
                     {paso.danoRecibido < 0 ? '+' : '−'}{Math.round(Math.abs(paso.danoRecibido))}
                   </span>
                 )}
@@ -82,7 +82,7 @@ export function BattleOverlay({ retador, rival, duelo, turno, terminado, aviso, 
           {ultimoGolpe && <div className="battle-victory"><span>VICTORIA</span><strong>{ganador.nombre}</strong><small>+{duelo.xpGanada} XP</small></div>}
         </div>
         <footer className="battle-footer">
-          <p role="status">{terminado ? aviso ?? 'Registrando el resultado…' : !paso ? 'Los combatientes entran a la arena…' : `TURNO ${paso.n} · ${nombreAtacante} ${paso.danoRecibido < 0 ? 'le devuelve energía a su rival' : 'lanza su ataque'}`}</p>
+          <p role="status">{terminado ? aviso ?? 'Registrando el resultado…' : !paso ? 'Los combatientes entran a la arena…' : `TURNO ${paso.n} · ${nombreAtacante} ${paso.danoRecibido < 0 ? 'le devuelve energía a su rival' : paso.critico ? '¡lanza su GOLPE CRÍTICO!' : 'lanza su ataque'}`}</p>
           <button ref={cerrar} className="btn" disabled={!terminado} onClick={onClose}>{terminado ? 'Volver a la arena' : 'Combate en curso'}</button>
         </footer>
       </div>

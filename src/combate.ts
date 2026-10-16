@@ -24,6 +24,14 @@ export function danoRecibido(atacante: Combatiente, defensor: Combatiente): numb
   return danoGenerado(atacante) - (defensor.armadura + danoGenerado(defensor) * 0.1)
 }
 
+/**
+ * Crítico (extensión al enunciado): 5% base + 0.75% por punto de destreza.
+ * El techo de 40% acota a los inflados — sin techo un smurf con destreza alta critía cada turno.
+ */
+export function probCritico(c: Combatiente): number {
+  return Math.min(0.4, 0.05 + c.destreza * 0.0075)
+}
+
 /** Si el vencedor es un Personaje gana 10 * nivel (TP2). */
 export function xpPorVictoria(c: Combatiente): number {
   return 10 * c.nivel
@@ -59,7 +67,12 @@ export function razonDominancia(c: Combatiente, tipico: Combatiente): number {
   return turnosQueMeAguantan / turnosQueYoAguanto
 }
 
-export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuelo {
+export function simular(
+  retador: Combatiente,
+  rival: Combatiente,
+  /** Inyectable para que la simulación siga siendo pura y testeable. */
+  random: () => number = Math.random,
+): ResultadoDuelo {
   let vidaR = retador.vida
   let vidaV = rival.vida
   const turnos: Turno[] = []
@@ -68,9 +81,12 @@ export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuel
     const atacante = n % 2 === 1 ? retador : rival
     const defensor = n % 2 === 1 ? rival : retador
     const bruto = danoRecibido(atacante, defensor)
+    // Crítico solo si el golpeLastimó: el daño negativo es "curación".
+    const critico = bruto > 0 && random() < probCritico(atacante)
+    const golpe = critico ? bruto * 2 : bruto
 
-    if (atacante === retador) vidaV -= bruto
-    else vidaR -= bruto
+    if (atacante === retador) vidaV -= golpe
+    else vidaR -= golpe
 
     // no se puede curar por encima de la vida máxima
     vidaR = Math.min(vidaR, retador.vida)
@@ -81,7 +97,8 @@ export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuel
       atacanteId: atacante.id,
       atacanteOrigen: atacante.origen,
       danoGenerado: danoGenerado(atacante),
-      danoRecibido: bruto,
+      danoRecibido: golpe,
+      critico: critico || undefined,
       vidaAtacante: Math.max(0, Math.round(atacante === retador ? vidaR : vidaV)),
       vidaDefensor: Math.max(0, Math.round(atacante === retador ? vidaV : vidaR)),
     })

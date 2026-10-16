@@ -53,7 +53,7 @@ npm run build    # typecheck + build de producción a dist/
 1. Llama a `GET /api/arena/inscriptos` en las 5 apps **en paralelo** y las une en un roster (solo los que están en una Arena).
 2. Marca como **smurf** a los personajes con estadísticas infladas y los bloquea para pelear.
 3. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
-4. Elegís retador y rival, `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno.
+4. Elegís retador y rival, `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno. Cada ataque tiene chance de **crítico** (daño ×2): `5% + destreza × 0.75%`, con techo de 40% para contener los smurfs.
 5. Al terminar el último turno, **el duelo se registra solo**: le manda `POST /api/arena/duelos` a las apps que poseen a los participantes (1 o 2), con el mismo `idDuelo`, y cada una aplica el veredicto de sus personajes.
 
 ## Detección de smurfs

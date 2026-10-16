@@ -470,6 +470,7 @@ button:focus-visible {
 .battle-puppet[data-action='ko'] { animation: puppet-ko 900ms 300ms ease-in both; }
 .battle-damage { position: absolute; z-index: 6; left: 48px; top: 10px; color: #ff8d88; text-shadow: 0 3px 12px #000; font: 36px var(--font-display); animation: battle-damage 1.15s 320ms both; }
 .battle-damage[data-healing='true'] { color: var(--ok); }
+.battle-damage[data-crit='true'] { color: #ffd88a; font-size: 48px; font-weight: 700; }
 .battle-impact { position: absolute; z-index: 5; top: 93px; left: 47px; width: 70px; height: 70px; color: #ffe7b0; filter: drop-shadow(0 0 16px #ffbb73); animation: battle-impact 500ms 300ms both; }
 .battle-impact svg { width: 100%; height: 100%; fill: currentColor; }
 .battle-victory { position: absolute; z-index: 8; left: 50%; top: 15%; transform: translateX(-50%); width: max-content; max-width: 95%; text-align: center; padding: 18px 40px; background: rgb(10 7 18 / 90%); border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); animation: battle-result 900ms both; }
