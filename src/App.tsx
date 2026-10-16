@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { cargarArenas, registrarDuelo, roster } from './api'
 import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
+import { BattleOverlay } from './BattleOverlay'
 import type { Arena, Combatiente, ParticipanteDuelo, ResultadoDuelo } from './types'
 
 type Aviso = { kind: 'error' | 'ok' | 'warn'; texto: string } | null
-const MS_POR_TURNO = 620
+const DURACION_COMBATE = 10_000
+const ENTRADA_COMBATE = 1_200
+const FIN_ATAQUES = 8_800
 
 export default function App() {
   const [arenas, setArenas] = useState<Arena[]>([])
@@ -13,6 +16,8 @@ export default function App() {
   const [elegidos, setElegidos] = useState<[Combatiente | null, Combatiente | null]>([null, null])
   const [duelo, setDuelo] = useState<ResultadoDuelo | null>(null)
   const [turno, setTurno] = useState(-1)
+  const [escena, setEscena] = useState(false)
+  const [animando, setAnimando] = useState(false)
   const [aviso, setAviso] = useState<Aviso>(null)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -33,10 +38,11 @@ export default function App() {
 
   const retador = elegidos[0]
   const rival = elegidos[1]
-  const bloqueado = !retador || !rival
-  const terminado = duelo !== null && turno >= duelo.turnos.length - 1
+  const bloqueado = !retador || !rival || animando
+  const terminado = duelo !== null && !animando && turno >= duelo.turnos.length - 1
 
   function elegir(c: Combatiente) {
+    if (animando) return
     if (timer.current) clearInterval(timer.current)
     if (c.smurf) {
       setAviso({ kind: 'warn', texto: `${c.nombre} tiene estadísticas infladas (smurf): no puede participar de un duelo.` })
@@ -45,10 +51,12 @@ export default function App() {
     setDuelo(null)
     setTurno(-1)
     setAviso(null)
-    setElegidos(([a, b]) => (a === null ? [c, null] : b === null && a.id !== c.id ? [a, c] : [null, null]))
+    setElegidos(([a, b]) => (a === null ? [c, null] : b === null && (a.id !== c.id || a.origen !== c.origen) ? [a, c] : [null, null]))
   }
 
   function limpiar() {
+    if (animando) return
+    setEscena(false)
     if (timer.current) clearInterval(timer.current)
     setElegidos([null, null])
     setDuelo(null)
@@ -57,20 +65,29 @@ export default function App() {
   }
 
   function pelear() {
-    if (!retador || !rival) return
+    if (!retador || !rival || animando) return
+    if (timer.current) clearInterval(timer.current)
     const resultado = simular(retador, rival)
     setDuelo(resultado)
     setAviso(null)
-    setTurno(0)
+    setTurno(-1)
+    setEscena(true)
+    setAnimando(true)
+    const inicio = performance.now()
     timer.current = setInterval(() => {
-      setTurno((t) => {
-        if (t >= resultado.turnos.length - 1) {
-          if (timer.current) clearInterval(timer.current)
-          return t
-        }
-        return t + 1
-      })
-    }, MS_POR_TURNO)
+      const transcurrido = performance.now() - inicio
+      if (transcurrido < ENTRADA_COMBATE) return
+      const avance = Math.min(1, (transcurrido - ENTRADA_COMBATE) / (FIN_ATAQUES - ENTRADA_COMBATE))
+      // En duelos largos se muestran hasta ocho golpes representativos en los mismos diez segundos.
+      const golpesVisibles = Math.min(8, resultado.turnos.length)
+      const golpe = Math.min(golpesVisibles - 1, Math.floor(avance * golpesVisibles))
+      setTurno(golpesVisibles === 1 ? 0 : Math.round(golpe * (resultado.turnos.length - 1) / (golpesVisibles - 1)))
+      if (transcurrido >= DURACION_COMBATE) {
+        if (timer.current) clearInterval(timer.current)
+        timer.current = null
+        setAnimando(false)
+      }
+    }, 40)
   }
 
   async function registrar() {
@@ -80,7 +97,7 @@ export default function App() {
     const porOrigen = new Map<string, ParticipanteDuelo[]>()
     for (const c of [retador, rival]) {
       const lista = porOrigen.get(c.origen) ?? []
-      lista.push({ id: c.id, resultado: c.id === duelo.ganadorId ? 'GANADOR' : 'PERDEDOR' })
+      lista.push({ id: c.id, resultado: c.id === duelo.ganadorId && c.origen === duelo.ganadorOrigen ? 'GANADOR' : 'PERDEDOR' })
       porOrigen.set(c.origen, lista)
     }
     const registros = [...porOrigen.entries()].map(([origen, partes]) =>
@@ -105,15 +122,21 @@ export default function App() {
   }, [terminado, duelo])
 
   const paso = duelo && turno >= 0 ? duelo.turnos[Math.min(turno, duelo.turnos.length - 1)] : null
-  const vidaDe = (c: Combatiente) => (paso ? (paso.atacanteId === c.id ? paso.vidaAtacante : paso.vidaDefensor) : c.vida)
-  const nombreDe = (id: number) => {
-    if (retador?.id === id) return retador.nombre
-    if (rival?.id === id) return rival.nombre
+  const esAtacante = (c: Combatiente) => paso?.atacanteId === c.id && paso.atacanteOrigen === c.origen
+  const esGanador = (c: Combatiente) => duelo?.ganadorId === c.id && duelo.ganadorOrigen === c.origen
+  const vidaDe = (c: Combatiente) => (paso ? (esAtacante(c) ? paso.vidaAtacante : paso.vidaDefensor) : c.vida)
+  const nombreDe = (id: number, origen: string) => {
+    if (retador?.id === id && retador.origen === origen) return retador.nombre
+    if (rival?.id === id && rival.origen === origen) return rival.nombre
     return `#${id}`
   }
 
   return (
     <div className="app">
+      {escena && duelo && retador && rival && (
+        <BattleOverlay retador={retador} rival={rival} duelo={duelo} turno={turno}
+          terminado={terminado} aviso={aviso?.texto} onClose={() => setEscena(false)} />
+      )}
       <nav className="nav">
         <div className="nav__title">ARENA <span>MULTIAPLICADOR</span></div>
         <div className="nav__meta">{inscriptos.length} combatientes · {arenas.length} apps</div>
@@ -167,7 +190,7 @@ export default function App() {
             <span>Duelo</span>
             <div className="actions">
               <button className="btn" disabled={bloqueado} onClick={pelear}>Pelear</button>
-              <button className="btn btn--ghost" onClick={limpiar}>Limpiar</button>
+              <button className="btn btn--ghost" disabled={animando} onClick={limpiar}>Limpiar</button>
             </div>
           </div>
 
@@ -182,9 +205,9 @@ export default function App() {
                     vida={vidaDe(retador)}
                     etiqueta="Retador"
                     lado="izq"
-                    atacando={paso?.atacanteId === retador.id}
-                    golpeado={paso?.atacanteId === rival.id}
-                    caido={terminado && duelo?.ganadorId !== retador.id}
+                    atacando={esAtacante(retador)}
+                    golpeado={esAtacante(rival)}
+                    caido={terminado && !esGanador(retador)}
                     dmgRecibido={paso?.danoRecibido}
                   />
                   <div className="vs">VS</div>
@@ -193,9 +216,9 @@ export default function App() {
                     vida={vidaDe(rival)}
                     etiqueta="Rival"
                     lado="der"
-                    atacando={paso?.atacanteId === rival.id}
-                    golpeado={paso?.atacanteId === retador.id}
-                    caido={terminado && duelo?.ganadorId !== rival.id}
+                    atacando={esAtacante(rival)}
+                    golpeado={esAtacante(retador)}
+                    caido={terminado && !esGanador(rival)}
                     dmgRecibido={paso?.danoRecibido}
                   />
                 </div>
@@ -205,7 +228,7 @@ export default function App() {
                     <div className="log" style={{ marginTop: '1.25rem' }}>
                       {duelo.turnos.slice(0, turno + 1).map((t) => (
                         <div key={t.n} className="log__row" data-turno={t.n === turno}>
-                          <b>T{t.n}</b> {nombreDe(t.atacanteId)} golpea por {Math.round(t.danoGenerado)} ·{' '}
+                          <b>T{t.n}</b> {nombreDe(t.atacanteId, t.atacanteOrigen)} golpea por {Math.round(t.danoGenerado)} ·{' '}
                           {t.danoRecibido >= 0
                             ? `recibe ${Math.round(t.danoRecibido)}`
                             : `se cura ${Math.round(-t.danoRecibido)}`}{' '}
@@ -216,7 +239,7 @@ export default function App() {
 
                     {terminado && (
                       <p className="veredicto" style={{ marginTop: '1rem' }}>
-                        {nombreDe(duelo.ganadorId)} GANA · +{duelo.xpGanada} XP
+                        {nombreDe(duelo.ganadorId, duelo.ganadorOrigen)} GANA · +{duelo.xpGanada} XP
                       </p>
                     )}
                   </>
