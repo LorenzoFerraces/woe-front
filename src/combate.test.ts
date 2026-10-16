@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { danoGenerado, danoRecibido, probCritico, razonDominancia, simular, xpPorVictoria } from './combate.ts'
-import { etiquetaDe, marcarSmurfs } from './api.ts'
+import { etiquetaDe, marcarSmurfs, palmares } from './api.ts'
 import type { Combatiente } from './types.ts'
 
 const guerrero: Combatiente = {
@@ -196,4 +196,25 @@ test('deriva la etiqueta del host de la URL', () => {
   // localhost a secas no sirve como nombre: se cae al host:port para que se distinguan
   assert.equal(etiquetaDe('http://localhost:8081/api/arena/inscriptos'), 'localhost:8081')
   assert.equal(etiquetaDe('no-es-una-url'), 'no-es-una-url', 'no explota con basura')
+})
+
+test('palmares: agrupa y suma victorias por origen', () => {
+  const p = palmares(['crudgpt', 'tots', 'crudgpt'])
+  assert.deepEqual(p, [
+    { origen: 'crudgpt', victorias: 2 },
+    { origen: 'tots', victorias: 1 },
+  ])
+})
+
+test('palmares: el desempate es alfabético', () => {
+  const p = palmares(['tots', 'crudgpt', 'tots', 'crudgpt'])
+  assert.equal(p.length, 2)
+  assert.equal(p[0].origen, 'crudgpt', 'empatados: primero el alfabético menor')
+  assert.equal(p[0].victorias, 2)
+})
+
+test('palmares: corta en el top 7', () => {
+  const p = palmares(Array.from({ length: 10 }, (_, i) => `app${i}`))
+  assert.equal(p.length, 7)
+  assert.equal(p[0].origen, 'app0', 'empatados en 1: orden alfabético')
 })

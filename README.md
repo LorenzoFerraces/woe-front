@@ -55,6 +55,7 @@ npm run build    # typecheck + build de producción a dist/
 3. Cada personaje muestra sus atributos, su arma y un avatar generado según clase y raza.
 4. Elegís retador y rival, `Pelear` simula el combate con las fórmulas del enunciado de TP2 y lo reproduce turno a turno. Cada ataque tiene chance de **crítico** (daño ×2): `5% + destreza × 0.75%`, con techo de 40% para contener los smurfs.
 5. Al terminar el último turno, **el duelo se registra solo**: le manda `POST /api/arena/duelos` a las apps que poseen a los participantes (1 o 2), con el mismo `idDuelo`, y cada una aplica el veredicto de sus personajes.
+6. Un **leaderboard** arriba del roster rankea grupos por los duelos ganados **en esta sesión** (no persiste; el top es de 7).
 
 ## Detección de smurfs
 

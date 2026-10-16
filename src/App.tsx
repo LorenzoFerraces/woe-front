@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { cargarArenas, registrarDuelo, roster } from './api'
+import { cargarArenas, palmares, registrarDuelo, roster } from './api'
 import { danoGenerado, simular } from './combate'
 import { Chibi } from './Chibi'
 import { BattleOverlay } from './BattleOverlay'
@@ -35,6 +35,10 @@ export default function App() {
   }, [refrescar])
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current) }, [])
+
+  // Leaderboard de la sesión: un ganadorOrigen por duelo registrado afecta a la tabla
+  const [victoriasSesion, setVictoriasSesion] = useState<string[]>([])
+  const top = palmares(victoriasSesion)
 
   const retador = elegidos[0]
   const rival = elegidos[1]
@@ -118,6 +122,7 @@ export default function App() {
   useEffect(() => {
     if (!terminado || !duelo || registrado.current === duelo.idDuelo) return
     registrado.current = duelo.idDuelo
+    setVictoriasSesion((v) => [...v, duelo.ganadorOrigen])
     void registrar()
   }, [terminado, duelo])
 
@@ -145,6 +150,28 @@ export default function App() {
       {aviso && <div className="banner" data-kind={aviso.kind}>{aviso.texto}</div>}
 
       <div style={{ display: 'grid', gap: '1.5rem' }}>
+        <section className="section">
+          <div className="section__head">
+            <span>Leaderboard</span>
+            <span>Victorias de esta sesión</span>
+          </div>
+          <div className="section__body">
+            {top.length === 0 ? (
+              <p className="hint">Todavía no hay duelos ganados esta sesión.</p>
+            ) : (
+              <ol className="leaderboard">
+                {top.map((fila, i) => (
+                  <li key={fila.origen}>
+                    <span className="leaderboard__pos" data-top={i === 0 || undefined}>#{i + 1}</span>
+                    <span className="leaderboard__origen">{fila.origen}</span>
+                    <span className="leaderboard__wins">{fila.victorias}G</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </section>
+
         <section className="section">
           <div className="section__head">
             <span>Inscriptos</span>

@@ -473,6 +473,12 @@ button:focus-visible {
 .battle-damage[data-crit='true'] { color: #ffd88a; font-size: 48px; font-weight: 700; }
 .battle-impact { position: absolute; z-index: 5; top: 93px; left: 47px; width: 70px; height: 70px; color: #ffe7b0; filter: drop-shadow(0 0 16px #ffbb73); animation: battle-impact 500ms 300ms both; }
 .battle-impact svg { width: 100%; height: 100%; fill: currentColor; }
+
+.leaderboard { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; }
+.leaderboard li { display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: center; gap: .75rem; padding: .55rem .75rem; background: var(--wash); border: 1px solid var(--border-subtle); }
+.leaderboard__pos { font: 14px var(--font-display); color: var(--text-muted); }
+.leaderboard__pos[data-top] { color: var(--accent); }
+.leaderboard__wins { font-weight: 700; color: var(--ok); }
 .battle-victory { position: absolute; z-index: 8; left: 50%; top: 15%; transform: translateX(-50%); width: max-content; max-width: 95%; text-align: center; padding: 18px 40px; background: rgb(10 7 18 / 90%); border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); animation: battle-result 900ms both; }
 .battle-victory span { display: block; font-size: 11px; letter-spacing: .35em; color: var(--accent); }
 .battle-victory strong { display: block; font: clamp(26px, 4vw, 42px) var(--font-display); }

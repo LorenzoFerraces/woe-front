@@ -73,6 +73,20 @@ export function marcarSmurfs(combatientes: Combatiente[]): Combatiente[] {
   })
 }
 
+/**
+ * Leaderboard de grupos por duelos de la sesión: recibe la lista de ganadores
+ * (`ganadorOrigen` de cada duelo) y devuelve el top 7, ordenado por victorias
+ * desc con desempate alfabético. Función pura, como el resto de la lógica de datos.
+ */
+export function palmares(ganadores: string[]): Array<{ origen: string; victorias: number }> {
+  const conteo = new Map<string, number>()
+  for (const origen of ganadores) conteo.set(origen, (conteo.get(origen) ?? 0) + 1)
+  return [...conteo.entries()]
+    .map(([origen, victorias]) => ({ origen, victorias }))
+    .sort((a, b) => b.victorias - a.victorias || a.origen.localeCompare(b.origen))
+    .slice(0, 7)
+}
+
 /** Trae el roster de cada app en paralelo y lo devuelve unificado con el `origen` puesto. */
 export async function roster(arenas: Arena[]): Promise<Combatiente[]> {
   const lists = await Promise.all(
