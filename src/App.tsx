@@ -45,7 +45,7 @@ export default function App() {
     setDuelo(null)
     setTurno(-1)
     setAviso(null)
-    setElegidos(([a, b]) => (a === null ? [c, null] : b === null && a.id !== c.id ? [a, c] : [null, null]))
+    setElegidos(([a, b]) => (a === null ? [c, null] : b === null && (a.id !== c.id || a.origen !== c.origen) ? [a, c] : [null, null]))
   }
 
   function limpiar() {
@@ -80,7 +80,7 @@ export default function App() {
     const porOrigen = new Map<string, ParticipanteDuelo[]>()
     for (const c of [retador, rival]) {
       const lista = porOrigen.get(c.origen) ?? []
-      lista.push({ id: c.id, resultado: c.id === duelo.ganadorId ? 'GANADOR' : 'PERDEDOR' })
+      lista.push({ id: c.id, resultado: c.id === duelo.ganadorId && c.origen === duelo.ganadorOrigen ? 'GANADOR' : 'PERDEDOR' })
       porOrigen.set(c.origen, lista)
     }
     const registros = [...porOrigen.entries()].map(([origen, partes]) =>
@@ -105,10 +105,12 @@ export default function App() {
   }, [terminado, duelo])
 
   const paso = duelo && turno >= 0 ? duelo.turnos[Math.min(turno, duelo.turnos.length - 1)] : null
-  const vidaDe = (c: Combatiente) => (paso ? (paso.atacanteId === c.id ? paso.vidaAtacante : paso.vidaDefensor) : c.vida)
-  const nombreDe = (id: number) => {
-    if (retador?.id === id) return retador.nombre
-    if (rival?.id === id) return rival.nombre
+  const esAtacante = (c: Combatiente) => paso?.atacanteId === c.id && paso.atacanteOrigen === c.origen
+  const esGanador = (c: Combatiente) => duelo?.ganadorId === c.id && duelo.ganadorOrigen === c.origen
+  const vidaDe = (c: Combatiente) => (paso ? (esAtacante(c) ? paso.vidaAtacante : paso.vidaDefensor) : c.vida)
+  const nombreDe = (id: number, origen: string) => {
+    if (retador?.id === id && retador.origen === origen) return retador.nombre
+    if (rival?.id === id && rival.origen === origen) return rival.nombre
     return `#${id}`
   }
 
@@ -182,9 +184,9 @@ export default function App() {
                     vida={vidaDe(retador)}
                     etiqueta="Retador"
                     lado="izq"
-                    atacando={paso?.atacanteId === retador.id}
-                    golpeado={paso?.atacanteId === rival.id}
-                    caido={terminado && duelo?.ganadorId !== retador.id}
+                    atacando={esAtacante(retador)}
+                    golpeado={esAtacante(rival)}
+                    caido={terminado && !esGanador(retador)}
                     dmgRecibido={paso?.danoRecibido}
                   />
                   <div className="vs">VS</div>
@@ -193,9 +195,9 @@ export default function App() {
                     vida={vidaDe(rival)}
                     etiqueta="Rival"
                     lado="der"
-                    atacando={paso?.atacanteId === rival.id}
-                    golpeado={paso?.atacanteId === retador.id}
-                    caido={terminado && duelo?.ganadorId !== rival.id}
+                    atacando={esAtacante(rival)}
+                    golpeado={esAtacante(retador)}
+                    caido={terminado && !esGanador(rival)}
                     dmgRecibido={paso?.danoRecibido}
                   />
                 </div>
@@ -205,7 +207,7 @@ export default function App() {
                     <div className="log" style={{ marginTop: '1.25rem' }}>
                       {duelo.turnos.slice(0, turno + 1).map((t) => (
                         <div key={t.n} className="log__row" data-turno={t.n === turno}>
-                          <b>T{t.n}</b> {nombreDe(t.atacanteId)} golpea por {Math.round(t.danoGenerado)} ·{' '}
+                          <b>T{t.n}</b> {nombreDe(t.atacanteId, t.atacanteOrigen)} golpea por {Math.round(t.danoGenerado)} ·{' '}
                           {t.danoRecibido >= 0
                             ? `recibe ${Math.round(t.danoRecibido)}`
                             : `se cura ${Math.round(-t.danoRecibido)}`}{' '}
@@ -216,7 +218,7 @@ export default function App() {
 
                     {terminado && (
                       <p className="veredicto" style={{ marginTop: '1rem' }}>
-                        {nombreDe(duelo.ganadorId)} GANA · +{duelo.xpGanada} XP
+                        {nombreDe(duelo.ganadorId, duelo.ganadorOrigen)} GANA · +{duelo.xpGanada} XP
                       </p>
                     )}
                   </>

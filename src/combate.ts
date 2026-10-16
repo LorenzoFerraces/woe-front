@@ -64,8 +64,6 @@ export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuel
   let vidaV = rival.vida
   const turnos: Turno[] = []
 
-  const generar = { [retador.id]: danoGenerado(retador), [rival.id]: danoGenerado(rival) }
-
   for (let n = 1; n <= MAX_TURNOS; n++) {
     const atacante = n % 2 === 1 ? retador : rival
     const defensor = n % 2 === 1 ? rival : retador
@@ -81,7 +79,8 @@ export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuel
     turnos.push({
       n,
       atacanteId: atacante.id,
-      danoGenerado: generar[atacante.id],
+      atacanteOrigen: atacante.origen,
+      danoGenerado: danoGenerado(atacante),
       danoRecibido: bruto,
       vidaAtacante: Math.max(0, Math.round(atacante === retador ? vidaR : vidaV)),
       vidaDefensor: Math.max(0, Math.round(atacante === retador ? vidaV : vidaR)),
@@ -105,7 +104,9 @@ export function simular(retador: Combatiente, rival: Combatiente): ResultadoDuel
   return {
     idDuelo: crypto.randomUUID(),
     ganadorId: ganador.id,
+    ganadorOrigen: ganador.origen,
     perdedorId: perdedor.id,
+    perdedorOrigen: perdedor.origen,
     turnos,
     xpGanada: xpPorVictoria(ganador),
   }

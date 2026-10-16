@@ -47,6 +47,7 @@ export interface RegistroDuelo {
 export interface Turno {
   n: number
   atacanteId: number
+  atacanteOrigen: string
   danoGenerado: number
   danoRecibido: number
   vidaAtacante: number
@@ -56,7 +57,9 @@ export interface Turno {
 export interface ResultadoDuelo {
   idDuelo: string
   ganadorId: number
+  ganadorOrigen: string
   perdedorId: number
+  perdedorOrigen: string
   turnos: Turno[]
   /** Solo para mostrar. La app lo recalcula al recibir el duelo. */
   xpGanada: number
